@@ -1,0 +1,7 @@
+version: '2.1'
+services:
+
+  bonus-service:
+    image: tele-gpt:latest
+    network_mode: host
+

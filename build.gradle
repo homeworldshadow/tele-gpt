@@ -5,6 +5,7 @@ plugins {
     id 'jacoco'
     id 'application'
     id "org.kordamp.gradle.project-enforcer" version "0.10.0"
+    id 'com.palantir.docker' version "0.34.0"
 }
 
 allprojects {
@@ -30,6 +31,11 @@ allprojects {
 
 application {
     mainClass = 'org.shadows.Bootstrap'
+}
+
+docker {
+    name 'tele-gpt:latest'
+    files tasks.installDist.outputs
 }
 
 dependencies {
