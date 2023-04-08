@@ -47,15 +47,14 @@ public class GptHandler implements UpdatesListener {
     @Override
     public int process(List<Update> updates) {
         for (Update upd : updates) {
-            log.debug("Received: text={}", upd.message().text());
             withRetry(() -> doUpdate(upd), retryMax, retryTimeout);
-
         }
         return UpdatesListener.CONFIRMED_UPDATES_ALL;
     }
 
 
     private Void doUpdate(Update upd) {
+        log.debug("Received: text={}", upd.message().text());
         GenericResponse<?> gptResponse = chatService.ask(upd.message().chat().id(), upd.message().text());
         AbstractSendRequest<?> tgRequest = null;
         if (gptResponse.isMessage()) {
@@ -83,6 +82,7 @@ public class GptHandler implements UpdatesListener {
             s.get();
         } catch (Exception e) {
             if (count > 0) {
+                log.warn("Left retries {} on exception: {}", count, e.toString());
                 try {
                     Thread.sleep(timeout.toMillis());
                 } catch (InterruptedException ex) {
