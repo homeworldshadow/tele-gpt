@@ -26,7 +26,8 @@ public class GptClient implements Closeable {
     private Map<Long, ChatContext> chatContextMap = new ConcurrentHashMap<>();
 
     public GptClient(Properties properties) {
-        service = new OpenAiService(properties.getProperty("gpt.api_key"), Duration.ofSeconds(180));
+        service = new OpenAiService(properties.getProperty("gpt.api_key"),
+                Duration.parse(properties.getProperty("gpt.client.read-timeout")));
         this.properties = properties;
     }
 

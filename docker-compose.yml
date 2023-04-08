@@ -1,7 +1,9 @@
 version: '2.1'
 services:
 
-  bonus-service:
+  tele-gpt:
     image: tele-gpt:latest
     network_mode: host
-
+    environment:
+      server.port: 8881
+      gpt.model: gpt-3.5-turbo

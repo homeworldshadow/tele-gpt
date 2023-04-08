@@ -1,7 +1,7 @@
 version: '2.1'
 services:
 
-  bonus-service:
+  tele-gpt:
     build:
       context: .
       dockerfile: Dockerfile
