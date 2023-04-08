@@ -24,7 +24,7 @@ public class GptBot implements Closeable {
         this.bot = new TelegramBot.Builder(properties.getProperty("tg.api_key"))
                 //.debug()
                 .build();
-        bot.setUpdatesListener(new GptHandler(bot, chatService));
+        bot.setUpdatesListener(new GptHandler(bot, chatService, properties));
         log.info("Starting bot...done");
     }
 
