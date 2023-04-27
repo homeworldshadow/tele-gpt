@@ -1,9 +1,11 @@
 package org.shadows.client;
 
-import com.theokanning.openai.service.OpenAiService;
+import com.theokanning.openai.completion.chat.ChatMessage;
+import com.theokanning.openai.image.ImageResult;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.Closeable;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
@@ -18,7 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 public class GptClient implements Closeable {
 
-    private OpenAiService service;
+    private OpenAiServiceExt service;
 
     private Properties properties;
 
@@ -31,28 +33,45 @@ public class GptClient implements Closeable {
         this.properties = properties;
     }
 
-    public GenericResponse<?> ask(Long id, String message) {
-        ChatContext chatContext = chatContextMap.compute(id,
-                (idd, ctx) -> ctx == null ? new ChatContext(properties) : ctx);
 
-        if (message.startsWith("Imagine,")) {
-            log.debug("chatId={}, message={}, type=image", id, message);
-            return Optional.ofNullable(service.createImage(
-                            chatContext.imageRequest(message.substring(7))))
-                    .map(GenericResponse::new)
-                    .orElse(null);
-        } else {
-            log.debug("chatId={}, message={}, type=text", id, message);
-            return service.createChatCompletion(chatContext.textRequest(message))
+    public Optional<ChatMessage> textAnswer(Long id, String text) {
+        Optional<ChatMessage> result = Optional.empty();
+        if (text != null) {
+            log.debug("chatId={}, message={}, type=text", id, text);
+            result = service.createChatCompletion(chatContext(id).textRequest(text))
                     .getChoices().stream()
                     .findFirst()
                     .map(c -> {
-                        chatContext.textResponse(c.getMessage());
+                        chatContext(id).textResponse(c.getMessage());
                         return c.getMessage();
-                    })
-                    .map(GenericResponse::new)
-                    .orElse(null);
+                    });
         }
+        return result;
+    }
+
+    public Optional<ImageResult> imageAnswer(Long id, String text) {
+        Optional<ImageResult> result = Optional.empty();
+        if (text != null && text.startsWith("Imagine,")) {
+            log.debug("chatId={}, message={}, type=image", id, text);
+            result = Optional.ofNullable(service.createImage(
+                    chatContext(id).imageRequest(text.substring(7))));
+        }
+        return result;
+    }
+
+    private ChatContext chatContext(Long id) {
+        return chatContextMap.compute(id,
+                (idd, ctx) -> ctx == null ? new ChatContext(properties) : ctx);
+    }
+
+
+    public String voiceToText(Path filePath) {
+        TranscriptionsRequest request = TranscriptionsRequest.builder()
+                .model("whisper-1")
+                .file(filePath.toString())
+                .build();
+        Transcription transcription = service.createTranscription(request);
+        return transcription.getText();
     }
 
 
