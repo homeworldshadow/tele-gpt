@@ -16,18 +16,13 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.shadows.client.GptClient;
 import org.shadows.converter.AudioConverter;
+import org.shadows.utils.Retry;
 
-import java.time.Duration;
 import java.io.FileOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
-import java.util.Optional;
-import java.util.Properties;
-import java.util.function.Supplier;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
+import java.time.Duration;
+import java.util.*;
 
 /**
  * Fill the comment
@@ -42,12 +37,9 @@ public class GptHandler implements UpdatesListener {
 
     private int retryMax;
     private Duration retryTimeout;
-
-    public GptHandler(TelegramBot bot, GptClient chatService, Properties properties) {
-        this.chatService = chatService;
     private AudioConverter audioConverter;
 
-    public GptHandler(TelegramBot bot, GptClient gptClient) {
+    public GptHandler(TelegramBot bot, GptClient gptClient, Properties properties) {
         this.gptClient = gptClient;
         this.bot = bot;
         this.retryMax = Optional.ofNullable(properties.getProperty("tg.retry.max"))
@@ -63,20 +55,22 @@ public class GptHandler implements UpdatesListener {
     @Override
     public int process(List<Update> updates) {
         for (Update upd : updates) {
-            try {
-                log.debug("Received: text={}", upd.message().text());
-                String text = null;
-                if (upd.message().text() != null) {
-                    text = upd.message().text();
-                } else if (upd.message().voice() != null) {
-                    text = voiceToText(upd.message());
-                }
-                responseByGpt(upd.message().chat().id(), text);
-            } catch (Exception e) {
-                log.error(e.toString(), e);
-            }
+            Retry.with(() -> doUpdate(upd), retryMax, retryTimeout);
         }
         return UpdatesListener.CONFIRMED_UPDATES_ALL;
+    }
+
+
+    private Void doUpdate(Update upd) {
+        log.debug("Received: text={}", upd.message().text());
+        String text = null;
+        if (upd.message().text() != null) {
+            text = upd.message().text();
+        } else if (upd.message().voice() != null) {
+            text = voiceToText(upd.message());
+        }
+        responseByGpt(upd.message().chat().id(), text);
+        return null;
     }
 
 
