@@ -25,6 +25,9 @@ allprojects {
 
     repositories {
         mavenCentral()
+        maven {
+            url = 'https://repository.jboss.org/nexus/content/repositories/releases/'
+        }
     }
 
 }
@@ -45,8 +48,25 @@ dependencies {
     implementation 'ws.schild:jave-nativebin-linux64:3.3.1'
     implementation 'com.github.pengrad:java-telegram-bot-api:6.6.0'
     implementation 'com.theokanning.openai-gpt3-java:service:0.12.0'
-    //implementation 'com.squareup.okhttp:logging-interceptor:2.7.5'
+    implementation 'net.sf.sociaal:freetts:1.2.2'
     implementation 'org.slf4j:slf4j-log4j12:2.0.7'
+
+    implementation 'com.github.pemistahl:lingua:1.2.2'
+
+
+    implementation 'com.squareup.retrofit2:converter-jackson:2.9.0'
+
+
+
+
+    implementation 'org.mobicents.external.freetts:freetts:1.2.2'
+    implementation 'org.mobicents.external.freetts:en_us:1.2.2'
+    implementation 'org.mobicents.external.freetts:cmu_us_kal:1.2.2'
+    implementation 'org.mobicents.external.freetts:cmu_time_awb:1.2.2'
+    implementation 'org.mobicents.external.freetts:cmulex:1.2.2'
+    implementation 'org.mobicents.external.freetts:cmutimelex:1.2.2'
+    implementation 'org.mobicents.external.freetts:cmudict04:1.2.2'
+
 
     compileOnly "org.projectlombok:lombok:1.18.20"
     annotationProcessor "org.projectlombok:lombok:1.18.20"
