@@ -4,14 +4,14 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
-import io.reactivex.Single;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.ConnectionPool;
 import okhttp3.OkHttpClient;
 import okhttp3.ResponseBody;
 import okhttp3.logging.HttpLoggingInterceptor;
-import retrofit2.*;
+import retrofit2.Call;
+import retrofit2.Response;
+import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
@@ -34,7 +34,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class OpenTTSClient {
 
-    private OpenTTSApi api;
+    private final OpenTTSApi api;
 
 
     protected OpenTTSClient(OpenTTSApi api) {
@@ -63,44 +63,15 @@ public class OpenTTSClient {
                 false);
 
         Path resultPath = Files.createTempFile(UUID.randomUUID().toString(), ".wav");
-        Response<ResponseBody> response =  call.execute();
+        Response<ResponseBody> response = call.execute();
         if (response.isSuccessful()) {
             if (response.body() != null) {
                 BufferedInputStream bis = new BufferedInputStream(response.body().byteStream());
-                try {
-                    Files.copy(bis, resultPath, StandardCopyOption.REPLACE_EXISTING);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
+                Files.copy(bis, resultPath, StandardCopyOption.REPLACE_EXISTING);
             }
         } else {
             log.error("Response not ok");
         }
-
-        /*call.enqueue(new Callback<>() {
-            @Override
-            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                if (response.isSuccessful()) {
-                    if (response.body() != null) {
-                        BufferedInputStream bis = new BufferedInputStream(response.body().byteStream());
-                        try {
-                            Files.copy(bis, resultPath);
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
-                } else {
-                    log.error("Response not ok");
-                }
-            }
-
-            @Override
-            public void onFailure(Call<ResponseBody> call, Throwable t) {
-                log.error(t.toString(), t);
-            }
-        });
-
-         */
         return resultPath;
     }
 
@@ -127,25 +98,6 @@ public class OpenTTSClient {
         mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
         mapper.setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE);
         return mapper;
-    }
-
-    public static <T> T execute(Single<T> apiCall) {
-        try {
-            return apiCall.blockingGet();
-        } catch (HttpException e) {
-            try {
-                if (e.response() == null || e.response().errorBody() == null) {
-                    throw e;
-                }
-                String errorBody = e.response().errorBody().string();
-                throw new RuntimeException(errorBody);
-                // OpenAiError error = mapper.readValue(errorBody, OpenAiError.class);
-                //throw new OpenAiHttpException(error, e, e.code());
-            } catch (IOException ex) {
-                // couldn't parse OpenAI error
-                throw e;
-            }
-        }
     }
 
 }

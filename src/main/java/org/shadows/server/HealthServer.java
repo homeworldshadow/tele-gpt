@@ -15,7 +15,7 @@ import java.util.Properties;
  */
 @Slf4j
 public class HealthServer implements Closeable {
-    private HttpServer server;
+    private final HttpServer server;
 
     public HealthServer(Properties properties) throws IOException {
         log.info("Starting http server...");

@@ -20,12 +20,12 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 public class GptClient implements Closeable {
 
-    private OpenAiServiceExt service;
+    private final OpenAiServiceExt service;
 
-    private Properties properties;
+    private final Properties properties;
 
 
-    private Map<Long, ChatContext> chatContextMap = new ConcurrentHashMap<>();
+    private final Map<Long, ChatContext> chatContextMap = new ConcurrentHashMap<>();
 
     public GptClient(Properties properties) {
         this.service = OpenAiServiceExt.getInstance(properties.getProperty("gpt.api_key"),

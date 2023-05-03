@@ -18,9 +18,9 @@ import java.util.UUID;
  */
 public class AudioConverter {
 
-    private Encoder encoder;
+    private final Encoder encoder;
 
-    private EncodingAttributes encodingAttributes;
+    private final EncodingAttributes encodingAttributes;
 
     public AudioConverter() {
         this.encoder = new Encoder();

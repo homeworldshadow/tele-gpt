@@ -3,12 +3,13 @@ package org.shadows.converter;
 import com.github.pemistahl.lingua.api.Language;
 import com.github.pemistahl.lingua.api.LanguageDetector;
 import com.github.pemistahl.lingua.api.LanguageDetectorBuilder;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.shadows.client.GptClient;
 import org.shadows.client.opentts.OpenTTSClient;
+import ws.schild.jave.EncoderException;
 
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
@@ -22,12 +23,12 @@ import java.util.UUID;
 public class TTSConverter {
 
 
-    private OpenTTSClient openTTSClient;
+    private final OpenTTSClient openTTSClient;
 
     private final GptClient gptClient;
     private final LanguageDetector detector = LanguageDetectorBuilder.fromAllLanguages().build();
 
-    private AudioConverter audioConverter;
+    private final AudioConverter audioConverter;
 
     public TTSConverter(OpenTTSClient openTTSClient, GptClient gptClient) {
         this.openTTSClient = openTTSClient;
@@ -42,8 +43,7 @@ public class TTSConverter {
         return detector.detectLanguageOf(text);
     }
 
-    @SneakyThrows
-    public Path textToVoice(String text) {
+    public Path textToVoice(String text) throws IOException, EncoderException {
         if (openTTSClient != null) {
             Path wavPath = null;
             try {
@@ -59,11 +59,9 @@ public class TTSConverter {
     }
 
 
-    @SneakyThrows
-    public String voiceToText(String mimeType, byte[] content) {
+    public String voiceToText(String mimeType, byte[] content) throws IOException, EncoderException {
         String result = null;
         if (content != null) {
-            //  File file = bot.execute(new GetFile(voice.fileId())).file();
             Path tgFilePath = mimeType.contains("ogg")
                     ? Files.createTempFile(UUID.randomUUID().toString(), ".ogg")
                     : Files.createTempFile(UUID.randomUUID().toString(), ".bin");
@@ -79,7 +77,6 @@ public class TTSConverter {
                 }
             }
         }
-        //  log.debug("Voice {} to text: {}", voice.fileId(), result);
         return result;
     }
 }

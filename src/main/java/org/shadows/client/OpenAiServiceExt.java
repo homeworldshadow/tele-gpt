@@ -23,7 +23,7 @@ import java.util.concurrent.ExecutorService;
  */
 public class OpenAiServiceExt extends OpenAiService {
 
-    private OpenAiApiExt apiExt;
+    private final OpenAiApiExt apiExt;
 
     public static OpenAiServiceExt getInstance(String token, Duration timeout) {
         ObjectMapper mapper = defaultObjectMapper();
