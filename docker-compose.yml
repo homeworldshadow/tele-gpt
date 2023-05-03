@@ -3,7 +3,17 @@ services:
 
   tele-gpt:
     image: tele-gpt:latest
+    container_name: tele-gpt
     network_mode: host
     environment:
       server.port: 8881
       gpt.model: gpt-3.5-turbo
+
+  opentts:
+    image: synesthesiam/opentts:all
+    container_name: opentts
+    restart: always
+    ports:
+      - 5500:5500
+
+
