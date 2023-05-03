@@ -2,27 +2,29 @@ package org.shadows.bot.telegram;
 
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.UpdatesListener;
-import com.pengrad.telegrambot.model.File;
-import com.pengrad.telegrambot.model.Message;
 import com.pengrad.telegrambot.model.Update;
-import com.pengrad.telegrambot.request.AbstractSendRequest;
-import com.pengrad.telegrambot.request.GetFile;
-import com.pengrad.telegrambot.request.SendMessage;
-import com.pengrad.telegrambot.request.SendPhoto;
+import com.pengrad.telegrambot.model.Voice;
+import com.pengrad.telegrambot.request.*;
 import com.pengrad.telegrambot.response.SendResponse;
 import com.theokanning.openai.completion.chat.ChatMessage;
 import com.theokanning.openai.image.ImageResult;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.shadows.client.GptClient;
-import org.shadows.converter.AudioConverter;
+import org.shadows.client.opentts.OpenTTSClient;
+import org.shadows.converter.TTSConverter;
 import org.shadows.utils.Retry;
 
-import java.io.FileOutputStream;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
-import java.util.*;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Properties;
 
 /**
  * Fill the comment
@@ -34,10 +36,9 @@ public class GptHandler implements UpdatesListener {
 
     private final GptClient gptClient;
     private final TelegramBot bot;
-
-    private int retryMax;
-    private Duration retryTimeout;
-    private AudioConverter audioConverter;
+    private final int retryMax;
+    private final Duration retryTimeout;
+    private final TTSConverter ttsConverter;
 
     public GptHandler(TelegramBot bot, GptClient gptClient, Properties properties) {
         this.gptClient = gptClient;
@@ -48,10 +49,24 @@ public class GptHandler implements UpdatesListener {
         this.retryTimeout = Optional.ofNullable(properties.getProperty("tg.retry.timeout"))
                 .map(Duration::parse)
                 .orElse(Duration.parse("PT10S"));
-        this.audioConverter = new AudioConverter();
+
+        this.ttsConverter = new TTSConverter(
+                Optional.ofNullable(properties.getProperty("opentts.url"))
+                        .map(s -> {
+                            try {
+                                return new URL(s);
+                            } catch (MalformedURLException e) {
+                                throw new RuntimeException(e);
+                            }
+                        })
+                        .map(url -> OpenTTSClient.getInstance(url,
+                                Optional.ofNullable(properties.getProperty("opentts.timeout"))
+                                        .map(Duration::parse)
+                                        .orElse(Duration.parse("PT10S"))))
+                        .orElse(null),
+                gptClient);
     }
 
-    @SneakyThrows
     @Override
     public int process(List<Update> updates) {
         for (Update upd : updates) {
@@ -61,20 +76,39 @@ public class GptHandler implements UpdatesListener {
     }
 
 
+    @SneakyThrows
     private Void doUpdate(Update upd) {
         log.debug("Received: text={}", upd.message().text());
-        String text = null;
         if (upd.message().text() != null) {
-            text = upd.message().text();
+            textResponse(upd.message().chat().id(), upd.message().text());
         } else if (upd.message().voice() != null) {
-            text = voiceToText(upd.message());
+            voiceResponse(upd.message().chat().id(), upd.message().voice(), true);
         }
-        responseByGpt(upd.message().chat().id(), text);
         return null;
     }
 
+    private void voiceResponse(Long chatId, Voice voice, boolean textResponseFallback) throws IOException {
+        Objects.requireNonNull(chatId, "Chat ID is required");
+        if (voice != null) {
+            String textRequest = ttsConverter.voiceToText(voice.mimeType(),
+                    bot.getFileContent(bot.execute(new GetFile(voice.fileId())).file()));
+            Optional<ChatMessage> textAnswer = gptClient.textAnswer(chatId, textRequest);
+            Optional<Path> voicePath = textAnswer.map(chatMessage -> ttsConverter.textToVoice(chatMessage.getContent()));
+            try {
+                if (response(voicePath.map(path -> new SendVoice(chatId, path.toFile()))) == null
+                        && textResponseFallback) {
+                    response(textAnswer.map(msg -> new SendMessage(chatId, msg.getContent())));
+                }
+            } finally {
+                if (voicePath.isPresent()) {
+                    Files.delete(voicePath.get());
+                }
+            }
+        }
+    }
 
-    private void responseByGpt(Long chatId, String text) {
+
+    private void textResponse(Long chatId, String text) {
         Objects.requireNonNull(chatId, "Chat ID is required");
         if (text != null) {
             Optional<AbstractSendRequest<?>> tgRequest;
@@ -87,38 +121,19 @@ public class GptHandler implements UpdatesListener {
                 tgRequest = message.map(msg -> new SendMessage(chatId,
                         msg.getContent()));
             }
-            if (tgRequest.isPresent()) {
-                SendResponse tgResponse = bot.execute(tgRequest.get());
-                log.debug("Response: text={}, Response: isOk={}, text={}",
-                        text, tgResponse.isOk(), tgResponse.message().text());
-            } else {
-                log.debug("Unprocessed message: text={}", text);
-            }
+            response(tgRequest);
         }
     }
 
-
-    @SneakyThrows
-    private String voiceToText(Message message) {
-        String result = null;
-        if (message.voice() != null) {
-            File file = bot.execute(new GetFile(message.voice().fileId())).file();
-            Path tgFilePath = message.voice().mimeType().contains("ogg")
-                    ? Files.createTempFile(UUID.randomUUID().toString(), ".ogg")
-                    : Files.createTempFile(UUID.randomUUID().toString(), ".bin");
-            Path mp3FilePath = null;
-            try (FileOutputStream fos = new FileOutputStream(tgFilePath.toFile())) {
-                fos.write(bot.getFileContent(file));
-                mp3FilePath = audioConverter.convertToMp3(tgFilePath);
-                result = gptClient.voiceToText(mp3FilePath);
-            } finally {
-                Files.delete(tgFilePath);
-                if (mp3FilePath != null) {
-                    Files.delete(mp3FilePath);
-                }
-            }
+    private SendResponse response(Optional<AbstractSendRequest<?>> request) {
+        SendResponse result = null;
+        if (request.isPresent()) {
+            result = bot.execute(request.get());
+            log.debug("Response: isOk={}, text={}",
+                    result.isOk(), result.message().text());
+        } else {
+            log.debug("Unprocessed request: {}", request);
         }
-        log.debug("Voice {} to text: {}", message.voice().fileId(), result);
         return result;
     }
 

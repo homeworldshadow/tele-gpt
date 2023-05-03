@@ -19,7 +19,7 @@ public class OpenTTSClientTest {
     @Test
     public void tts() throws IOException {
         OpenTTSClient client = OpenTTSClient.getInstance(new URL("http://localhost:5500"), Duration.ofSeconds(30));
-        Path path = client.textToSpeechFile("en", "Hello");
+        Path path = client.textToSpeechFile("ru", "Привет");
         Assert.assertNotNull(path);
     }
 
