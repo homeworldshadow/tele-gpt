@@ -12,7 +12,7 @@ import retrofit2.http.PartMap;
 import java.util.Map;
 
 /**
- * Fill the comment
+ * Extended OpenAi API
  *
  * @author bayura-ea
  */

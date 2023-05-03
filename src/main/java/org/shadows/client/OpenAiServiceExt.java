@@ -17,7 +17,7 @@ import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 
 /**
- * Fill the comment
+ * Extended OpenAi service
  *
  * @author bayura-ea
  */

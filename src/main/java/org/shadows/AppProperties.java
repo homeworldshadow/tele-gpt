@@ -5,7 +5,7 @@ import java.util.Optional;
 import java.util.Properties;
 
 /**
- * Fill the comment
+ * Properties collector
  *
  * @author bayura-ea
  */

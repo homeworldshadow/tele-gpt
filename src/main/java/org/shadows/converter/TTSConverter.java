@@ -15,7 +15,7 @@ import java.nio.file.Path;
 import java.util.UUID;
 
 /**
- * Fill the comment
+ * Text-to-Speech converter
  *
  * @author bayura-ea
  */

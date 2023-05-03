@@ -10,7 +10,7 @@ import java.net.MalformedURLException;
 import java.util.Properties;
 
 /**
- * Fill the comment
+ * Telegram GPT bot starter
  *
  * @author bayura-ea
  */

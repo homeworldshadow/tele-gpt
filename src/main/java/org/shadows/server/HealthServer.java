@@ -9,7 +9,7 @@ import java.net.InetSocketAddress;
 import java.util.Properties;
 
 /**
- * Fill the comment
+ * Health server
  *
  * @author bayura-ea
  */

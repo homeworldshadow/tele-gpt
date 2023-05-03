@@ -6,7 +6,7 @@ import java.time.Duration;
 import java.util.function.Supplier;
 
 /**
- * Fill the comment
+ * Retry utils
  *
  * @author bayura-ea
  */

@@ -26,7 +26,7 @@ import java.util.Optional;
 import java.util.Properties;
 
 /**
- * Fill the comment
+ * GPT bot message handler
  *
  * @author bayura-ea
  */
@@ -57,6 +57,7 @@ public class GptHandler implements UpdatesListener {
         String openttsUrl = properties.getProperty("opentts.url");
         OpenTTSClient openTTSClient = null;
         if (openttsUrl != null) {
+            log.info("OpenTTS URL config found: {}", openttsUrl);
             openTTSClient = OpenTTSClient.getInstance(new URL(openttsUrl),
                     Optional.ofNullable(properties.getProperty("opentts.timeout"))
                             .map(Duration::parse)
@@ -89,7 +90,6 @@ public class GptHandler implements UpdatesListener {
                 response(r);
                 cleanup(r);
             });
-
         }
         return null;
     }
@@ -107,10 +107,10 @@ public class GptHandler implements UpdatesListener {
     }
 
     private ResponseType getType(Message message) {
-        if (message.text() != null) {
-            return ResponseType.TEXT;
-        } else if (message.text() != null && message.text().startsWith("Imagine,")) {
+        if (message.text() != null && message.text().startsWith("Imagine,")) {
             return ResponseType.IMAGE;
+        } else if (message.text() != null) {
+            return ResponseType.TEXT;
         } else if (message.voice() != null) {
             return ResponseType.VOICE;
         }

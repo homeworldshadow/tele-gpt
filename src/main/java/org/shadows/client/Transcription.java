@@ -3,7 +3,7 @@ package org.shadows.client;
 import lombok.Data;
 
 /**
- * Fill the comment
+ * Voice transcription
  *
  * @author bayura-ea
  */

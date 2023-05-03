@@ -13,7 +13,7 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Fill the comment
+ * GPT client
  *
  * @author bayura-ea
  */

@@ -27,7 +27,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Fill the comment
+ * OpenTTS API client
  *
  * @author bayura-ea
  */

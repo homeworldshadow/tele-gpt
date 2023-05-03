@@ -8,7 +8,7 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 
 /**
- * Fill the comment
+ * Health request handler
  *
  * @author bayura-ea
  */

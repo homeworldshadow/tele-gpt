@@ -12,7 +12,7 @@ import java.nio.file.Path;
 import java.util.UUID;
 
 /**
- * Fill the comment
+ * Audio format converter
  *
  * @author bayura-ea
  */

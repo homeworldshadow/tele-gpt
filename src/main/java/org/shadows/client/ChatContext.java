@@ -10,7 +10,7 @@ import java.util.*;
 import static com.theokanning.openai.completion.chat.ChatMessageRole.USER;
 
 /**
- * Fill the comment
+ * GPT topic context
  *
  * @author bayura-ea
  */

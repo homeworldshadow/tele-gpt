@@ -5,7 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 
 /**
- * Fill the comment
+ * Voice transcription request
  *
  * @author bayura-ea
  */

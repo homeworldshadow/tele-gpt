@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.util.Properties;
 
 /**
- * Fill the comment
+ * Starter class
  *
  * @author bayura-ea
  */
