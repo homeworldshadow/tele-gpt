@@ -4,20 +4,22 @@ import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.UpdatesListener;
 import com.pengrad.telegrambot.model.Message;
 import com.pengrad.telegrambot.model.Update;
-import com.pengrad.telegrambot.request.*;
+import com.pengrad.telegrambot.request.AbstractSendRequest;
+import com.pengrad.telegrambot.request.GetFile;
+import com.pengrad.telegrambot.request.SendMessage;
+import com.pengrad.telegrambot.request.SendPhoto;
+import com.pengrad.telegrambot.request.SendVoice;
 import com.pengrad.telegrambot.response.SendResponse;
+import com.theokanning.openai.completion.chat.ChatMessage;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.shadows.client.GptClient;
-import org.shadows.client.opentts.OpenTTSClient;
+import org.shadows.client.openai.GptClient;
 import org.shadows.converter.TTSConverter;
 import org.shadows.utils.Retry;
 import ws.schild.jave.EncoderException;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -44,7 +46,7 @@ public class GptHandler implements UpdatesListener {
     private final TTSConverter ttsConverter;
 
 
-    public GptHandler(TelegramBot bot, GptClient gptClient, Properties properties) throws MalformedURLException {
+    public GptHandler(TelegramBot bot, GptClient gptClient, TTSConverter ttsConverter, Properties properties) {
         this.gptClient = gptClient;
         this.bot = bot;
         this.retryMax = Optional.ofNullable(properties.getProperty("tg.retry.max"))
@@ -53,17 +55,7 @@ public class GptHandler implements UpdatesListener {
         this.retryTimeout = Optional.ofNullable(properties.getProperty("tg.retry.timeout"))
                 .map(Duration::parse)
                 .orElse(Duration.parse("PT10S"));
-
-        String openttsUrl = properties.getProperty("opentts.url");
-        OpenTTSClient openTTSClient = null;
-        if (openttsUrl != null) {
-            log.info("OpenTTS URL config found: {}", openttsUrl);
-            openTTSClient = OpenTTSClient.getInstance(new URL(openttsUrl),
-                    Optional.ofNullable(properties.getProperty("opentts.timeout"))
-                            .map(Duration::parse)
-                            .orElse(Duration.parse("PT10S")));
-        }
-        this.ttsConverter = new TTSConverter(openTTSClient, gptClient);
+        this.ttsConverter = ttsConverter;
     }
 
     @Override
@@ -131,11 +123,14 @@ public class GptHandler implements UpdatesListener {
     private Optional<AbstractSendRequest<?>> voiceAnswer(Long chatId, String text, boolean textResponseFallback)
             throws IOException, EncoderException {
         AbstractSendRequest<?> result = null;
-        Path voicePath = ttsConverter.textToVoice(text);
-        if (voicePath != null) {
-            result = new SendVoice(chatId, voicePath.toFile());
-        } else if (textResponseFallback) {
-            result = new SendMessage(chatId, text);
+        Optional<ChatMessage> chatMessage = gptClient.textAnswer(chatId, text);
+        if (chatMessage.isPresent()) {
+            Path voicePath = ttsConverter.textToVoice(chatMessage.get().getContent());
+            if (voicePath != null) {
+                result = new SendVoice(chatId, voicePath.toFile());
+            } else if (textResponseFallback) {
+                result = new SendMessage(chatId, chatMessage.get().getContent());
+            }
         }
         return Optional.ofNullable(result);
     }

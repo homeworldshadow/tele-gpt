@@ -4,7 +4,7 @@ import com.github.pemistahl.lingua.api.Language;
 import com.github.pemistahl.lingua.api.LanguageDetector;
 import com.github.pemistahl.lingua.api.LanguageDetectorBuilder;
 import lombok.extern.slf4j.Slf4j;
-import org.shadows.client.GptClient;
+import org.shadows.client.openai.GptClient;
 import org.shadows.client.opentts.OpenTTSClient;
 import ws.schild.jave.EncoderException;
 

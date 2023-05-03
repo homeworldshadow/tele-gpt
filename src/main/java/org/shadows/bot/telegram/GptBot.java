@@ -3,10 +3,10 @@ package org.shadows.bot.telegram;
 import com.pengrad.telegrambot.TelegramBot;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.shadows.client.GptClient;
+import org.shadows.client.openai.GptClient;
+import org.shadows.converter.TTSConverter;
 
 import java.io.Closeable;
-import java.net.MalformedURLException;
 import java.util.Properties;
 
 /**
@@ -20,12 +20,12 @@ public class GptBot implements Closeable {
 
     private final TelegramBot bot;
 
-    public GptBot(Properties properties, GptClient chatService) throws MalformedURLException {
+    public GptBot(Properties properties, GptClient chatService, TTSConverter ttsConverter) {
         log.info("Starting bot...");
         this.bot = new TelegramBot.Builder(properties.getProperty("tg.api_key"))
                 //.debug()
                 .build();
-        bot.setUpdatesListener(new GptHandler(bot, chatService, properties));
+        bot.setUpdatesListener(new GptHandler(bot, chatService, ttsConverter, properties));
         log.info("Starting bot...done");
     }
 

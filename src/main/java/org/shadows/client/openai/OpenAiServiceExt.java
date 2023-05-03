@@ -1,4 +1,4 @@
-package org.shadows.client;
+package org.shadows.client.openai;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.theokanning.openai.service.OpenAiService;

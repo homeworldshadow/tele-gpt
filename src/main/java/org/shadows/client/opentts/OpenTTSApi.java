@@ -13,10 +13,6 @@ import retrofit2.http.Query;
  */
 public interface OpenTTSApi {
 
-    /*curl -X 'GET' \
-            'http://localhost:5500/api/tts?voice=larynx%3Aen&text=Welcome%20to%20the%20world%20of%20speech%20synthesis%21&vocoder=high&denoiserStrength=0.03&cache=false' \
-            -H 'accept: *//*'
-     */
     @Headers({"Accept: */*"})
     @GET("/api/tts")
     Call<ResponseBody> textToSpeech(@Query("voice") String voice,

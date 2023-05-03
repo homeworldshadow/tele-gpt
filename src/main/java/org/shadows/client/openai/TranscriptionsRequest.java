@@ -1,4 +1,4 @@
-package org.shadows.client;
+package org.shadows.client.openai;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;

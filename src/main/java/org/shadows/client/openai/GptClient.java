@@ -1,4 +1,4 @@
-package org.shadows.client;
+package org.shadows.client.openai;
 
 import com.theokanning.openai.completion.chat.ChatMessage;
 import com.theokanning.openai.image.ImageResult;

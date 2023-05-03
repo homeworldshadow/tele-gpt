@@ -1,4 +1,4 @@
-package org.shadows.client;
+package org.shadows.client.openai;
 
 import com.theokanning.openai.OpenAiApi;
 import io.reactivex.Single;
