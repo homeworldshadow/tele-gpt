@@ -16,7 +16,6 @@ services:
     image: synesthesiam/opentts:all
     restart: always
     container_name: opentts
-    restart: always
     ports:
       - 5500:5500
 
