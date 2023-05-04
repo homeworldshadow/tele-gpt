@@ -4,8 +4,6 @@ import spock.lang.Specification
 
 
 /**
- * Fill the comment
- *
  * @author bayura-ea
  */
 class BootstrapTest extends Specification {

@@ -1,12 +1,12 @@
 package org.shadows.client.openai;
 
+import com.theokanning.openai.completion.chat.ChatCompletionRequest;
 import com.theokanning.openai.completion.chat.ChatMessage;
 import com.theokanning.openai.image.ImageResult;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.Closeable;
 import java.nio.file.Path;
-import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
@@ -27,9 +27,8 @@ public class GptClient implements Closeable {
 
     private final Map<Long, ChatContext> chatContextMap = new ConcurrentHashMap<>();
 
-    public GptClient(Properties properties) {
-        this.service = OpenAiServiceExt.getInstance(properties.getProperty("gpt.api_key"),
-                Duration.parse(properties.getProperty("gpt.client.read-timeout")));
+    public GptClient(OpenAiServiceExt openAiService, Properties properties) {
+        this.service = openAiService;
         this.properties = properties;
     }
 
@@ -38,13 +37,18 @@ public class GptClient implements Closeable {
         Optional<ChatMessage> result = Optional.empty();
         if (text != null) {
             log.debug("chatId={}, message={}, type=text", id, text);
-            result = service.createChatCompletion(chatContext(id).textRequest(text))
-                    .getChoices().stream()
-                    .findFirst()
-                    .map(c -> {
-                        chatContext(id).textResponse(c.getMessage());
-                        return c.getMessage();
-                    });
+            ChatCompletionRequest chatCompletionRequest = chatContext(id).textRequest(text);
+            if (chatCompletionRequest != null
+                    && chatCompletionRequest.getMessages() != null
+                    && !chatCompletionRequest.getMessages().isEmpty()) {
+                result = service.createChatCompletion(chatCompletionRequest)
+                        .getChoices().stream()
+                        .findFirst()
+                        .map(c -> {
+                            chatContext(id).textResponse(c.getMessage());
+                            return c.getMessage();
+                        });
+            }
         }
         return result;
     }

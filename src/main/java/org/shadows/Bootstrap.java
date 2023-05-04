@@ -3,6 +3,7 @@ package org.shadows;
 import lombok.extern.slf4j.Slf4j;
 import org.shadows.bot.telegram.GptBot;
 import org.shadows.client.openai.GptClient;
+import org.shadows.client.openai.OpenAiServiceExt;
 import org.shadows.client.opentts.OpenTTSClient;
 import org.shadows.converter.TTSConverter;
 import org.shadows.server.HealthServer;
@@ -29,7 +30,9 @@ public final class Bootstrap {
         log.info("Loading configs and init objects...");
         Properties properties = new AppProperties();
         log.debug("Configs: {}", properties);
-        GptClient chatService = new GptClient(properties);
+        OpenAiServiceExt openAiServiceExt = OpenAiServiceExt.getInstance(properties.getProperty("gpt.api_key"),
+                Duration.parse(properties.getProperty("gpt.client.read-timeout")));
+        GptClient chatService = new GptClient(openAiServiceExt, properties);
         TTSConverter ttsConverter = new TTSConverter(buildOpenTTSClient(properties), chatService);
         GptBot gptBot = new GptBot(properties, chatService, ttsConverter);
         HealthServer server = new HealthServer(properties);

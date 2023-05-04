@@ -27,6 +27,7 @@ public class ChatContext {
     private final List<ChatMessage> messageList = new ArrayList<>();
 
     public ChatContext(Properties properties) {
+        Objects.requireNonNull(properties, "GPT model is required");
         this.model = Objects.requireNonNull(properties.getProperty("gpt.model"), "GPT model is required");
         this.imageSize = Optional.ofNullable(properties.getProperty("gpt.image.size"))
                 .orElseGet(() -> {
@@ -38,9 +39,9 @@ public class ChatContext {
     public ChatCompletionRequest textRequest(String message) {
         if (!message.isBlank() && message.toLowerCase().startsWith("new topic")) {
             messageList.clear();
+        } else {
+            messageList.add(new ChatMessage(USER.value(), message));
         }
-        ChatMessage chatMessage = new ChatMessage(USER.value(), message);
-        messageList.add(chatMessage);
         return ChatCompletionRequest.builder()
                 .model(model)
                 .messages(messageList)

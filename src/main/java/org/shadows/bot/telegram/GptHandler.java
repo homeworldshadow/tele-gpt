@@ -128,7 +128,7 @@ public class GptHandler implements UpdatesListener {
             Path voicePath = ttsConverter.textToVoice(chatMessage.get().getContent());
             if (voicePath != null) {
                 result = new SendVoice(chatId, voicePath.toFile());
-            } else if (textResponseFallback) {
+            } else if (textResponseFallback && chatMessage.get().getContent() != null) {
                 result = new SendMessage(chatId, chatMessage.get().getContent());
             }
         }
@@ -139,8 +139,10 @@ public class GptHandler implements UpdatesListener {
     private void response(AbstractSendRequest<?> request) {
         if (request != null) {
             SendResponse result = bot.execute(request);
-            log.debug("Response: isOk={}, text={}",
-                    result.isOk(), result.message().text());
+            if (result != null) {
+                log.debug("Response: isOk={}, text={}",
+                        result.isOk(), result.message() != null ? result.message().text() : null);
+            }
         }
     }
 
@@ -149,7 +151,7 @@ public class GptHandler implements UpdatesListener {
     private void cleanup(AbstractSendRequest<?> request) {
         if (request instanceof SendVoice voice) {
             File file = (File) voice.getParameters().get("voice");
-            if (file != null) {
+            if (file != null && file.exists()) {
                 Files.delete(file.toPath());
             }
         }
