@@ -3,6 +3,7 @@ services:
 
   tele-gpt:
     image: tele-gpt:latest
+    restart: always
     container_name: tele-gpt
     network_mode: host
     environment:
@@ -11,6 +12,7 @@ services:
 
   opentts:
     image: synesthesiam/opentts:all
+    restart: always
     container_name: opentts
     restart: always
     ports:
