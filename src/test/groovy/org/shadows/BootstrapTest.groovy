@@ -1,7 +1,7 @@
 package org.shadows
 
-import spock.lang.Specification
 
+import spock.lang.Specification
 
 /**
  * @author bayura-ea

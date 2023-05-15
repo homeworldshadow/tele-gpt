@@ -120,12 +120,16 @@ public class GptHandler implements UpdatesListener {
         return Optional.empty();
     }
 
-    private Optional<AbstractSendRequest<?>> voiceAnswer(Long chatId, String text, boolean textResponseFallback)
-            throws IOException, EncoderException {
+    private Optional<AbstractSendRequest<?>> voiceAnswer(Long chatId, String text, boolean textResponseFallback) {
         AbstractSendRequest<?> result = null;
         Optional<ChatMessage> chatMessage = gptClient.textAnswer(chatId, text);
         if (chatMessage.isPresent()) {
-            Path voicePath = ttsConverter.textToVoice(chatMessage.get().getContent());
+            Path voicePath = null;
+            try {
+                voicePath = ttsConverter.textToVoice(chatMessage.get().getContent());
+            } catch (Exception e) {
+                log.error(e.toString(), e);
+            }
             if (voicePath != null) {
                 result = new SendVoice(chatId, voicePath.toFile());
             } else if (textResponseFallback && chatMessage.get().getContent() != null) {
