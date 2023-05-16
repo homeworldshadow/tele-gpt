@@ -4,6 +4,8 @@ services:
   tele-gpt:
     image: tele-gpt:latest
     restart: always
+    depends_on:
+      - opentts
     container_name: tele-gpt
     network_mode: host
     environment:
