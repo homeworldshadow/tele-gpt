@@ -43,6 +43,12 @@ Properties
 - __gpt.client.read-timeout__ - GPT client timeout (duration string)
 - __opentts.url__ - OpenTTS URL (URL string)
 - __opentts.timeout__ - OpenTTS response timeout (duration string)
+- __opentts.quality__ - Voice quality (string: low, medium, high). Default: medium
+- __opentts.tts-voice.XX__ - OpenTTS voice coder, where XX is ISO2 lang. Example:
+
+        opentts.tts-voice.en=larynx:blizzard_fls-glow_tts
+        opentts.tts-voice.ru=larynx:hajdurova-glow_tts
+  
 
 ## Team
 
