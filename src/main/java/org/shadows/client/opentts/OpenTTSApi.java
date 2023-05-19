@@ -6,6 +6,8 @@ import retrofit2.http.GET;
 import retrofit2.http.Headers;
 import retrofit2.http.Query;
 
+import java.util.Map;
+
 /**
  * OpenTTS API
  *
@@ -20,6 +22,15 @@ public interface OpenTTSApi {
                                     @Query("vocoder") String vocoder,
                                     @Query("denoiserStrength") Number denoiserStrength,
                                     @Query("cache") Boolean cache
+    );
+
+
+    @Headers({"Accept: */*"})
+    @GET("/api/voices")
+    Call<Map<String, OpenTTSVoice>> voices(@Query("tts_name") String ttsName,
+                                           @Query("language") String language,
+                                           @Query("locale") String locale,
+                                           @Query("gender") Number gender
     );
 
 }
