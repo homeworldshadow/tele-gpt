@@ -14,6 +14,7 @@ import com.pengrad.telegrambot.response.GetFileResponse
 import com.theokanning.openai.completion.chat.ChatMessage
 import com.theokanning.openai.image.Image
 import com.theokanning.openai.image.ImageResult
+import org.shadows.AppProperties
 import org.shadows.client.openai.GptClient
 import org.shadows.client.openai.OpenAiServiceExt
 import org.shadows.converter.TTSConverter
@@ -32,7 +33,7 @@ class GptHandlerTest extends Specification {
         TelegramBot botMock = Mock()
         GptClient gptClientMock = Mock()
         TTSConverter ttsConverterMock = Mock()
-        Properties properties = new Properties()
+        def properties = new AppProperties()
         properties['tg.retry.max'] = '0'
         GptHandler handler = new GptHandler(botMock, gptClientMock, ttsConverterMock, properties)
         gptClientMock.textAnswer(chatId, inputMessage) >> Optional.of(new ChatMessage(content: outputMessage))
@@ -63,7 +64,7 @@ class GptHandlerTest extends Specification {
         TelegramBot botMock = Mock()
         GptClient gptClientMock = Mock()
         TTSConverter ttsConverterMock = Mock()
-        Properties properties = new Properties()
+        def properties = new AppProperties()
         properties['tg.retry.max'] = '0'
         GptHandler handler = new GptHandler(botMock, gptClientMock, ttsConverterMock, properties)
         gptClientMock.textAnswer(chatId, inputMessage) >> Optional.of(new ChatMessage(content: '_dummy_'))
@@ -101,7 +102,7 @@ class GptHandlerTest extends Specification {
         TelegramBot botMock = Mock()
         GptClient gptClientMock = Mock()
         TTSConverter ttsConverterMock = Mock()
-        Properties properties = new Properties()
+        def properties = new AppProperties()
         properties['tg.retry.max'] = '0'
         GptHandler handler = new GptHandler(botMock, gptClientMock, ttsConverterMock, properties)
 
@@ -143,7 +144,7 @@ class GptHandlerTest extends Specification {
         TelegramBot botMock = Mock()
         GptClient gptClientMock = Mock()
         TTSConverter ttsConverterMock = Mock()
-        Properties properties = new Properties()
+        def properties = new AppProperties()
         properties['tg.retry.max'] = '0'
         GptHandler handler = new GptHandler(botMock, gptClientMock, ttsConverterMock, properties)
 
@@ -182,7 +183,7 @@ class GptHandlerTest extends Specification {
         TelegramBot botMock = Mock()
         GptClient gptClientMock = Mock()
         TTSConverter ttsConverterMock = Mock()
-        Properties properties = new Properties()
+        def properties = new AppProperties()
         properties['tg.retry.max'] = '1'
         properties['tg.retry.timeout'] = 'PT1S'
         GptHandler handler = new GptHandler(botMock, gptClientMock, ttsConverterMock, properties)
@@ -215,7 +216,7 @@ class GptHandlerTest extends Specification {
     def "Handle message to clear topic context"() {
         setup:
         def chatId = 1L
-        Properties properties = new Properties()
+        def properties = new AppProperties()
         properties['tg.retry.max'] = '0'
 
         TelegramBot botMock = Mock()

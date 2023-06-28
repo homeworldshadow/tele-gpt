@@ -2,11 +2,11 @@ package org.shadows.server;
 
 import com.sun.net.httpserver.HttpServer;
 import lombok.extern.slf4j.Slf4j;
+import org.shadows.AppProperties;
 
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.util.Properties;
 
 /**
  * Health server
@@ -17,10 +17,10 @@ import java.util.Properties;
 public class HealthServer implements Closeable {
     private final HttpServer server;
 
-    public HealthServer(Properties properties) throws IOException {
+    public HealthServer(AppProperties properties) throws IOException {
         log.info("Starting http server...");
         server = HttpServer.create(new InetSocketAddress("127.0.0.1",
-                        Integer.parseInt(properties.getProperty("server.port"))),
+                        properties.serverPort()),
                 0);
         server.createContext("/health", new HealthHandler());
         server.start();

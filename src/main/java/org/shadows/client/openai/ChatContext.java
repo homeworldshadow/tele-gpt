@@ -4,12 +4,10 @@ import com.theokanning.openai.completion.chat.ChatCompletionRequest;
 import com.theokanning.openai.completion.chat.ChatMessage;
 import com.theokanning.openai.image.CreateImageRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.shadows.AppProperties;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Properties;
 
 import static com.theokanning.openai.completion.chat.ChatMessageRole.USER;
 
@@ -26,14 +24,9 @@ public class ChatContext {
 
     private final List<ChatMessage> messageList = new ArrayList<>();
 
-    public ChatContext(Properties properties) {
-        Objects.requireNonNull(properties, "GPT model is required");
-        this.model = Objects.requireNonNull(properties.getProperty("gpt.model"), "GPT model is required");
-        this.imageSize = Optional.ofNullable(properties.getProperty("gpt.image.size"))
-                .orElseGet(() -> {
-                    log.warn("Default 512x512 image size is used");
-                    return "512x512";
-                });
+    public ChatContext(AppProperties properties) {
+        this.model = properties.gptModel();
+        this.imageSize = properties.gptImageSize();
     }
 
     public ChatCompletionRequest textRequest(String message) {

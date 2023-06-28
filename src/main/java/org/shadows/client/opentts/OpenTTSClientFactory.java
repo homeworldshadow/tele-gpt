@@ -8,18 +8,14 @@ import lombok.extern.slf4j.Slf4j;
 import okhttp3.ConnectionPool;
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
+import org.shadows.AppProperties;
 import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.Duration;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Properties;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 /**
  * OpenTTSClient factory
@@ -29,37 +25,12 @@ import java.util.stream.Collectors;
 @Slf4j
 public final class OpenTTSClientFactory {
 
-    private static final String OPENTTS_VOICE_PREFIX = "opentts.tts-voice.";
-
     private OpenTTSClientFactory() {
     }
 
-    public static OpenTTSClient getInstance(Properties properties) {
-
-        String urlStr = properties.getProperty("opentts.url");
-        URL url = Optional.ofNullable(urlStr)
-                .map(spec -> {
-                    try {
-                        return new URL(spec);
-                    } catch (MalformedURLException e) {
-                        throw new OpenTTSException("Failed to create OpenTTSClient. OpenTTS url is incorrect", e);
-                    }
-                })
-                .orElseThrow(() -> new OpenTTSException("Failed to create OpenTTSClient. OpenTTS url is undefined"));
-
-        log.info("OpenTTS URL config found: {}", url);
-        Duration timeout = Optional.ofNullable(properties.getProperty("opentts.timeout"))
-                .map(Duration::parse)
-                .orElse(Duration.parse("PT10S"));
-
-        Map<String, String> voiceMap = properties.entrySet().stream()
-                .filter(e -> ((String) e.getKey()).startsWith(OPENTTS_VOICE_PREFIX)
-                        && ((String) e.getKey()).length() > OPENTTS_VOICE_PREFIX.length()
-                        && e.getValue() != null)
-                .collect(Collectors.toMap(
-                        k -> ((String) k.getKey()).substring(OPENTTS_VOICE_PREFIX.length()),
-                        v -> ((String) v.getValue()).trim().toLowerCase()));
-
+    public static OpenTTSClient getInstance(AppProperties properties) {
+        URL url = properties.openttsUrl();
+        Duration timeout = properties.openttsTimeout();
         ObjectMapper mapper = defaultObjectMapper();
         HttpLoggingInterceptor logger = new HttpLoggingInterceptor();
         logger.setLevel(HttpLoggingInterceptor.Level.BODY);
@@ -68,17 +39,8 @@ public final class OpenTTSClientFactory {
                 .addInterceptor(logger)
                 .build();
         Retrofit retrofit = defaultRetrofit(url, client, mapper);
-        OpenTTSClient.VoiceQuality quality = OpenTTSClient.VoiceQuality.high;
-        try {
-            quality = Optional.ofNullable(properties.getProperty("opentts.quality"))
-                    .map(OpenTTSClient.VoiceQuality::valueOf)
-                    .orElse(OpenTTSClient.VoiceQuality.high);
-
-        } catch (Exception e) {
-            log.error("Voice quality parameter is unkmown: {}", properties.getProperty("opentts.quality"));
-        }
         OpenTTSApi api = retrofit.create(OpenTTSApi.class);
-        return new OpenTTSClient(api, voiceMap, quality);
+        return new OpenTTSClient(api, properties.openttsVoiceMap(), properties.openttsQuality());
     }
 
     public static Retrofit defaultRetrofit(URL url, OkHttpClient client, ObjectMapper mapper) {

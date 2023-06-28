@@ -13,6 +13,7 @@ import com.pengrad.telegrambot.response.SendResponse;
 import com.theokanning.openai.completion.chat.ChatMessage;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.shadows.AppProperties;
 import org.shadows.client.openai.GptClient;
 import org.shadows.converter.TTSConverter;
 import org.shadows.utils.Retry;
@@ -25,7 +26,6 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
-import java.util.Properties;
 
 /**
  * GPT bot message handler
@@ -46,15 +46,11 @@ public class GptHandler implements UpdatesListener {
     private final TTSConverter ttsConverter;
 
 
-    public GptHandler(TelegramBot bot, GptClient gptClient, TTSConverter ttsConverter, Properties properties) {
+    public GptHandler(TelegramBot bot, GptClient gptClient, TTSConverter ttsConverter, AppProperties properties) {
         this.gptClient = gptClient;
         this.bot = bot;
-        this.retryMax = Optional.ofNullable(properties.getProperty("tg.retry.max"))
-                .map(Integer::parseInt)
-                .orElse(1);
-        this.retryTimeout = Optional.ofNullable(properties.getProperty("tg.retry.timeout"))
-                .map(Duration::parse)
-                .orElse(Duration.parse("PT10S"));
+        this.retryMax = properties.tgRetryMax();
+        this.retryTimeout = properties.tgRetryTimeout();
         this.ttsConverter = ttsConverter;
     }
 

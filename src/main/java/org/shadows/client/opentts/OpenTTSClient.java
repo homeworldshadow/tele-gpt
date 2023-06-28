@@ -22,7 +22,7 @@ import java.util.UUID;
 @Slf4j
 public class OpenTTSClient {
 
-    enum VoiceQuality {
+    public enum VoiceQuality {
         high, medium, low
     }
 

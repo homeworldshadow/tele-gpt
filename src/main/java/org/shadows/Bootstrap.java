@@ -9,8 +9,6 @@ import org.shadows.converter.TTSConverter;
 import org.shadows.server.HealthServer;
 
 import java.io.IOException;
-import java.time.Duration;
-import java.util.Properties;
 
 /**
  * Starter class
@@ -25,14 +23,13 @@ public final class Bootstrap {
 
     public static void main(String[] args) throws IOException {
         log.info("Loading configs and init objects...");
-        Properties properties = new AppProperties();
+        var properties = new AppProperties();
         log.debug("Configs: {}", properties);
-        OpenAiServiceExt openAiServiceExt = OpenAiServiceExt.getInstance(properties.getProperty("gpt.api_key"),
-                Duration.parse(properties.getProperty("gpt.client.read-timeout")));
-        GptClient chatService = new GptClient(openAiServiceExt, properties);
-        TTSConverter ttsConverter = new TTSConverter(OpenTTSClientFactory.getInstance(properties), chatService);
-        GptBot gptBot = new GptBot(properties, chatService, ttsConverter);
-        HealthServer server = new HealthServer(properties);
+        var openAiServiceExt = OpenAiServiceExt.getInstance(properties.gptApiKey(), properties.gptClientReadTimeout());
+        var chatService = new GptClient(openAiServiceExt, properties);
+        var ttsConverter = new TTSConverter(OpenTTSClientFactory.getInstance(properties), chatService);
+        var gptBot = new GptBot(properties, chatService, ttsConverter);
+        var server = new HealthServer(properties);
         log.info("Loading configs and init objects...done");
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             log.info("Shutting down...");

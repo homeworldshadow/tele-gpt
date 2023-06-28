@@ -11,6 +11,8 @@ services:
     environment:
       server.port: 8881
       gpt.model: gpt-3.5-turbo
+      tg.api_key: the_key
+      gpt.api_key: the_key
 
   opentts:
     image: synesthesiam/opentts:all

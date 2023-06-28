@@ -4,12 +4,12 @@ import com.theokanning.openai.completion.chat.ChatCompletionRequest;
 import com.theokanning.openai.completion.chat.ChatMessage;
 import com.theokanning.openai.image.ImageResult;
 import lombok.extern.slf4j.Slf4j;
+import org.shadows.AppProperties;
 
 import java.io.Closeable;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -22,12 +22,12 @@ public class GptClient implements Closeable {
 
     private final OpenAiServiceExt service;
 
-    private final Properties properties;
+    private final AppProperties properties;
 
 
     private final Map<Long, ChatContext> chatContextMap = new ConcurrentHashMap<>();
 
-    public GptClient(OpenAiServiceExt openAiService, Properties properties) {
+    public GptClient(OpenAiServiceExt openAiService, AppProperties properties) {
         this.service = openAiService;
         this.properties = properties;
     }

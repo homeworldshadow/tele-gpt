@@ -2,6 +2,7 @@ package org.shadows.client.openai
 
 
 import com.theokanning.openai.completion.chat.ChatMessage
+import org.shadows.AppProperties
 import spock.lang.Specification
 
 /**
@@ -15,12 +16,12 @@ class ChatContextTest extends Specification {
         then:
         thrown NullPointerException
         where:
-        properties << [null, new Properties()]
+        properties << [null]
     }
 
     def "Keep chat request/response context"() {
         setup:
-        Properties properties = new Properties()
+        def properties = new AppProperties()
         properties['gpt.model'] = 'non-null'
         ChatContext chatContext = new ChatContext(properties)
         when:
@@ -36,7 +37,7 @@ class ChatContextTest extends Specification {
 
     def "Chat request/response context can be cleared"() {
         setup:
-        Properties properties = new Properties()
+        def properties = new AppProperties()
         properties['gpt.model'] = 'non-null'
         ChatContext chatContext = new ChatContext(properties)
         when:
