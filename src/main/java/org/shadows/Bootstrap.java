@@ -1,5 +1,6 @@
 package org.shadows;
 
+import com.github.pemistahl.lingua.api.LanguageDetectorBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.shadows.bot.telegram.GptBot;
 import org.shadows.client.openai.GptClient;
@@ -27,7 +28,8 @@ public final class Bootstrap {
         log.debug("Configs: {}", properties);
         var openAiServiceExt = OpenAiServiceExt.getInstance(properties.gptApiKey(), properties.gptClientReadTimeout());
         var chatService = new GptClient(openAiServiceExt, properties);
-        var ttsConverter = new TTSConverter(OpenTTSClientFactory.getInstance(properties), chatService);
+        var ttsConverter = new TTSConverter(OpenTTSClientFactory.getInstance(properties), chatService,
+                LanguageDetectorBuilder.fromAllLanguages().build());
         var gptBot = new GptBot(properties, chatService, ttsConverter);
         var server = new HealthServer(properties);
         log.info("Loading configs and init objects...done");

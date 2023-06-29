@@ -46,6 +46,7 @@ docker {
 }
 
 test {
+    maxHeapSize '1024m'
     useJUnitPlatform()
     finalizedBy jacocoTestReport
 }

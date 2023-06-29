@@ -2,7 +2,6 @@ package org.shadows.converter;
 
 import com.github.pemistahl.lingua.api.Language;
 import com.github.pemistahl.lingua.api.LanguageDetector;
-import com.github.pemistahl.lingua.api.LanguageDetectorBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.shadows.client.openai.GptClient;
 import org.shadows.client.opentts.OpenTTSClient;
@@ -24,16 +23,15 @@ public class TTSConverter {
 
 
     private final OpenTTSClient openTTSClient;
-
     private final GptClient gptClient;
-    private final LanguageDetector detector = LanguageDetectorBuilder.fromAllLanguages().build();
-
+    private final LanguageDetector detector;
     private final AudioConverter audioConverter;
 
-    public TTSConverter(OpenTTSClient openTTSClient, GptClient gptClient) {
+    public TTSConverter(OpenTTSClient openTTSClient, GptClient gptClient, LanguageDetector detector) {
         this.openTTSClient = openTTSClient;
         this.gptClient = gptClient;
         this.audioConverter = new AudioConverter();
+        this.detector = detector;
     }
 
     private Language detectLang(String text) {

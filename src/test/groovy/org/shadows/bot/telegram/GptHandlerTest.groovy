@@ -1,5 +1,7 @@
 package org.shadows.bot.telegram
 
+import com.github.pemistahl.lingua.api.Language
+import com.github.pemistahl.lingua.api.LanguageDetectorBuilder
 import com.pengrad.telegrambot.TelegramBot
 import com.pengrad.telegrambot.UpdatesListener
 import com.pengrad.telegrambot.model.Chat
@@ -11,32 +13,47 @@ import com.pengrad.telegrambot.request.SendMessage
 import com.pengrad.telegrambot.request.SendPhoto
 import com.pengrad.telegrambot.request.SendVoice
 import com.pengrad.telegrambot.response.GetFileResponse
+import com.theokanning.openai.completion.chat.ChatCompletionChoice
+import com.theokanning.openai.completion.chat.ChatCompletionResult
 import com.theokanning.openai.completion.chat.ChatMessage
 import com.theokanning.openai.image.Image
 import com.theokanning.openai.image.ImageResult
 import org.shadows.AppProperties
 import org.shadows.client.openai.GptClient
 import org.shadows.client.openai.OpenAiServiceExt
+import org.shadows.client.opentts.OpenTTSClient
 import org.shadows.converter.TTSConverter
+import spock.lang.Shared
 import spock.lang.Specification
 
+import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.StandardCopyOption
 
 /**
  * @author bayura-ea
  */
 class GptHandlerTest extends Specification {
 
+    @Shared
+    String TEST_FILES_PATH = 'src/test/resources/sounds/'
+    @Shared
+    String WAV_TEST_FILE_PATH = 'src/test/resources/sounds/CHIMES.wav'
+    @Shared
+    String OGG_TEST_FILE_PATH = 'src/test/resources/sounds/CHIMES.ogg'
+
     def "Handle text request/response messages"() {
         setup:
         def chatId = 1L
         TelegramBot botMock = Mock()
-        GptClient gptClientMock = Mock()
         TTSConverter ttsConverterMock = Mock()
         def properties = new AppProperties()
         properties['tg.retry.max'] = '0'
-        GptHandler handler = new GptHandler(botMock, gptClientMock, ttsConverterMock, properties)
-        gptClientMock.textAnswer(chatId, inputMessage) >> Optional.of(new ChatMessage(content: outputMessage))
+        OpenAiServiceExt openAiService = Mock(OpenAiServiceExt)
+        openAiService.createChatCompletion(_) >> new ChatCompletionResult(choices:
+                [new ChatCompletionChoice(message: new ChatMessage(content: outputMessage))])
+        GptClient gptClient = new GptClient(openAiService, new AppProperties())
+        GptHandler handler = new GptHandler(botMock, gptClient, ttsConverterMock, properties)
         when:
         Update update = new Update(message:
                 new Message(chat:
@@ -48,7 +65,7 @@ class GptHandlerTest extends Specification {
         then:
         noExceptionThrown()
         result == UpdatesListener.CONFIRMED_UPDATES_ALL
-        invocation_count * botMock.execute({ it.parameters['text'] == outputMessage }  as SendMessage)
+        invocation_count * botMock.execute({ it.parameters['text'] == outputMessage } as SendMessage)
         where:
         inputMessage | outputMessage | invocation_count
         'in'         | 'out'         | 1
@@ -62,13 +79,16 @@ class GptHandlerTest extends Specification {
         setup:
         def chatId = 1L
         TelegramBot botMock = Mock()
-        GptClient gptClientMock = Mock()
+        //GptClient gptClientMock = Mock()
         TTSConverter ttsConverterMock = Mock()
         def properties = new AppProperties()
         properties['tg.retry.max'] = '0'
-        GptHandler handler = new GptHandler(botMock, gptClientMock, ttsConverterMock, properties)
-        gptClientMock.textAnswer(chatId, inputMessage) >> Optional.of(new ChatMessage(content: '_dummy_'))
-        gptClientMock.imageAnswer(chatId, inputMessage) >> Optional.of(new ImageResult(data: [new Image(url: imageUrl)]))
+        OpenAiServiceExt openAiService = Mock(OpenAiServiceExt)
+        openAiService.createChatCompletion(_) >> new ChatCompletionResult(choices:
+                [new ChatCompletionChoice(message: new ChatMessage(content: '_dummy_'))])
+        openAiService.createImage(_) >> new ImageResult(data: [new Image(url: imageUrl)])
+        GptClient gptClient = new GptClient(openAiService, new AppProperties())
+        GptHandler handler = new GptHandler(botMock, gptClient, ttsConverterMock, properties)
         when:
         Update update = new Update(message:
                 new Message(chat:
@@ -96,25 +116,24 @@ class GptHandlerTest extends Specification {
         setup:
         def chatId = 1L
         def inputVoiceFileId = 'input_voice_file_id.ogg'
-        def outVoicePath = Path.of("/tmp/output_voice_file.mp3")
         def outputMessage = 'output_text'
-
         TelegramBot botMock = Mock()
+        botMock.getFileContent(_) >> new File(OGG_TEST_FILE_PATH).bytes
         GptClient gptClientMock = Mock()
-        TTSConverter ttsConverterMock = Mock()
+        gptClientMock.voiceToText(_) >> inputMessage
+        gptClientMock.textAnswer(chatId, inputMessage) >> Optional.of(new ChatMessage(content: outputMessage))
+        OpenTTSClient openTTSClientMock = Mock()
+        def wavFileCopy = Path.of(TEST_FILES_PATH + UUID.randomUUID() + '.wav')
+        Files.copy(Path.of(WAV_TEST_FILE_PATH), wavFileCopy, StandardCopyOption.REPLACE_EXISTING)
+        openTTSClientMock.textToSpeechFile(_, _) >> wavFileCopy
+        TTSConverter ttsConverter = new TTSConverter(openTTSClientMock, gptClientMock,
+                LanguageDetectorBuilder.fromLanguages(Language.ENGLISH, Language.RUSSIAN).build())
         def properties = new AppProperties()
         properties['tg.retry.max'] = '0'
-        GptHandler handler = new GptHandler(botMock, gptClientMock, ttsConverterMock, properties)
-
+        GptHandler handler = new GptHandler(botMock, gptClientMock, ttsConverter, properties)
         GetFileResponse getFileResponse = Mock()
         getFileResponse.file() >> new com.pengrad.telegrambot.model.File(file_id: inputVoiceFileId)
         botMock.execute(_ as GetFile) >> getFileResponse
-
-        ttsConverterMock.voiceToText('ogg', _) >> inputMessage
-        ttsConverterMock.textToVoice(outputMessage) >> outVoicePath
-
-        gptClientMock.textAnswer(chatId, inputMessage) >> Optional.of(new ChatMessage(content: outputMessage))
-
         when:
         Update update = new Update(message:
                 new Message(chat:
@@ -126,13 +145,14 @@ class GptHandlerTest extends Specification {
         then:
         noExceptionThrown()
         result == UpdatesListener.CONFIRMED_UPDATES_ALL
-        invocation_count * botMock.execute({ it.parameters['voice'] == outVoicePath.toFile() } as SendVoice)
+        invocation_count * botMock.execute({ it.parameters['voice'].toString().contains('mp3') } as SendVoice)
+        cleanup:
+        wavFileCopy.toFile().delete()
         where:
         inputMessage | invocation_count
         'in'         | 1
         ''           | 1
         null         | 0
-
     }
 
 

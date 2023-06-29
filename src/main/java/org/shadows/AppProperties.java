@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class AppProperties extends Properties {
 
-    private static final String OPENTTS_VOICE_PREFIX = "opentts.tts-voice.";
+    public static final String OPENTTS_VOICE_PREFIX = "opentts.tts-voice.";
 
 
     public AppProperties() throws IOException {
@@ -98,7 +98,7 @@ public class AppProperties extends Properties {
                     .map(OpenTTSClient.VoiceQuality::valueOf)
                     .orElse(OpenTTSClient.VoiceQuality.medium);
         } catch (Exception e) {
-            log.warn("Voice quality parameter is unkmown: {}, using {} as default",
+            log.warn("Voice quality parameter is unknown: {}, using {} as default",
                     getProperty("opentts.quality"), OpenTTSClient.VoiceQuality.medium);
             return OpenTTSClient.VoiceQuality.medium;
         }
