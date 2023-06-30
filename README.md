@@ -2,7 +2,7 @@
 
 ## Overview
 
-The [Telegram](https://telegram.org/) chat-bot backend to interact with [OpenAI platform](https://platform.openai.com/overview).
+The [Telegram](https://telegram.org/) chat-bot to interact with [OpenAI platform](https://platform.openai.com/overview).
 
 ## Requirements
 
