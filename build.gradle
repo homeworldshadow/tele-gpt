@@ -37,7 +37,7 @@ allprojects {
 }
 
 application {
-    mainClass = 'org.shadows.Bootstrap'
+    mainClass = 'org.free.Bootstrap'
 }
 
 docker {
