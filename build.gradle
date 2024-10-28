@@ -4,7 +4,6 @@ plugins {
     id "checkstyle"
     id 'jacoco'
     id 'application'
-    id "org.kordamp.gradle.project-enforcer" version "0.10.0"
     id 'com.palantir.docker' version "0.34.0"
 }
 
@@ -20,10 +19,9 @@ allprojects {
         checkstyleTest.enabled = false
     }
 
-    enforce {
-        rule(enforcer.rules.EnforceBytecodeVersion) { r ->
-            r.maxJdkVersion = "17"
-
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(17)
         }
     }
 
